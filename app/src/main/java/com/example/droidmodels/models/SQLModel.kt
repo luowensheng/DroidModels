@@ -45,7 +45,6 @@ class SQLDatabase(
             columnContent.joinToString(" ")
         }
         val q = ("CREATE TABLE IF NOT EXISTS ${model.getName()} ( ${columns.joinToString(", ")} )")
-        Log.w("DBHELP", q)
         return q
     }
 
@@ -106,7 +105,7 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
             "SELECT * FROM $name WHERE ${this.id.name} = ?", arrayOf(id)
         )
         if (!cursor.moveToFirst()) {
-            readableDatabase.close()
+            cursor.close()
             return Optional.empty()
         }
 
@@ -122,8 +121,7 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
             }
 
         }
-        readableDatabase.close()
-
+        cursor.close()
         return Optional.of(this.fromMap(map))
     }
 
