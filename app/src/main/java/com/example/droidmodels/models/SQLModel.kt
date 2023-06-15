@@ -22,40 +22,55 @@ class SQLDatabase(
     private val hasSetDB = false
 
     override fun onCreate(db: SQLiteDatabase) {
+        Log.e("TABLE CREATE", "START")
+        Log.e("TABLE CREATE", "START")
+        Log.e("TABLE CREATE", "START")
+        Log.e("TABLE CREATE", "START")
+        Log.e("TABLE CREATE", "START")
+        Log.e("TABLE CREATE", "START")
+        Log.e("TABLE CREATE", "START")
+        Log.e("TABLE CREATE", "START")
+        Log.e("TABLE CREATE", "START")
+
         for (value in models.values){
             db.execSQL(value)
+            Log.e("TABLE CREATE", value)
         }
+        Log.e("TABLE CREATE", "DONE")
+
     }
 
     private fun createTableCommand(model: SQLModel<*>): String {
 
-        val columns = model.getColumns().map{ column ->
+        val columns = model.getColumns().map { column ->
 
             val columnContent = mutableListOf(column.name)
 
-            if (column.primaryKey){
+            columnContent.add(column.getSQLType())
+
+            if (column.primaryKey) {
                 columnContent.add("PRIMARY KEY AUTOINCREMENT")
             }
-            if (column.unique){
+            if (column.unique) {
                 columnContent.add("UNIQUE")
             }
 
-            columnContent.add(column.getSQLType())
-
             columnContent.joinToString(" ")
         }
-        val q = ("CREATE TABLE IF NOT EXISTS ${model.getName()} ( ${columns.joinToString(", ")} )")
-        return q
+        return ("CREATE TABLE IF NOT EXISTS ${model.getName()} ( ${columns.joinToString(", ")} )")
     }
 
     fun <T: Document>addModel(model: SQLModel<T>){
         if(!hasSetDB) SQLModel.db = this
         model.postInit()
-        models[model.getName()] = createTableCommand(model)
+        val command = createTableCommand(model)
+        models[model.getName()] = command
+//
+//        this.readableDatabase.execSQL(command)
+//        this.writableDatabase.close()
     }
 
     override fun onUpgrade(db: SQLiteDatabase, p1: Int, p2: Int) {
-        // this method is to check if table already exists
         for (name in models.keys){
             db.execSQL("DROP TABLE IF EXISTS $name")
         }
@@ -129,24 +144,29 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
 
         val values = ContentValues()
 
-        block().forEach {(column, value) ->
+        val updates = block()
+        updates.forEach {(column, value) ->
             values.put(column.name, value)
         }
 
-        db.writableDatabase.update(name, values, "${this@SQLModel.id.name} = ?", arrayOf(id))
+        val count = db.writableDatabase.update(name, values, "${this@SQLModel.id.name} = ?", arrayOf(id))
         db.writableDatabase.close()
 
-        return false
+        return count == updates.size
     }
 
     override fun delete(id: Long): Boolean {
+        return delete(listOf(id))
+    }
 
-        val count = db.writableDatabase.delete(name, "${this.id.name} = ?", arrayOf("$id"))
+    override fun delete(ids: List<Long>): Boolean {
+
+        val count = db.writableDatabase.delete(name, "${this.id.name} = ?", ids.map { "$it" }.toTypedArray())
         db.writableDatabase.close()
 
         Log.e("RAPPING", "count => [$count], id => $id")
 
-        return count == 1
+        return count == ids.size
     }
 
     override fun add(item: T): Boolean {
@@ -161,14 +181,16 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
             }
         }
 
-        db.writableDatabase.insert(name, null, values)
+        val rowId = db.writableDatabase.insert(name, null, values)
         db.writableDatabase.close()
 
-        return true
+        return rowId != (-1).toLong()
     }
 
     private fun query(q: String): Optional<List<T>> {
+        Log.e("DBQUERY", q)
         val cursor = db.readableDatabase.rawQuery(q, null)
+        Log.e("DBQUERY MADE!!", q)
 
         if (!cursor.moveToFirst()) {
             cursor.close()

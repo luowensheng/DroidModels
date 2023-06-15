@@ -45,16 +45,6 @@ data class Post(
         var index = 0
     }
 
-    object Shared {
-       private var posts = mutableListOf<Post>()
-       fun add(post: Post){
-           posts.add(post)
-       }
-        fun getAll(): List<Post> {
-            return posts
-        }
-
-    }
         companion object Model: SQLModel<Post>("post", Post::class) {
             override val id = SQLPrimaryColumn("id", Post::id)
 
@@ -64,7 +54,7 @@ data class Post(
             val categories = SQLColumn("categories", Post::categories)
             val liked = SQLColumn("liked", Post::liked)
             val inReadingList = SQLColumn("in_reading_list", Post::inReadingList)
-            val createdDate = SQLColumn("create_date", Post::createdDate)
+            val createdDate = SQLColumn("created_date", Post::createdDate)
             val imageUrl = SQLColumn("image_url", Post::imageUrl)
 
             override fun fromMap(data: Map<String, Any?>): Post {
@@ -182,7 +172,7 @@ class MainActivity: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         actionBar.ifNotNull { it.hide() }
         setContentView(R.layout.main)
-
+        Log.e("DATABASE db DELETED", "Success: ${this.deleteDatabase("db")}")
         val db = SQLDatabase(this, null, "db", 1)
         db.addModel(Post)
 
@@ -218,7 +208,7 @@ class MainActivity: AppCompatActivity() {
 //                    if (listOf(url, title, categories, data, imageUrl).any { url.isBlank() }){
 //                        Toast.makeText(this, "Fields must not be blank!", Toast.LENGTH_SHORT).show()
 //                        return@setOnClickListener
-//                    }
+//                    }read
                     val success = Post.add(
                         Post(
                             url=url,
@@ -263,6 +253,9 @@ class MainActivity: AppCompatActivity() {
                         val view = post.toView(this)
                         posts.add(Pair(post, view))
                         postContainer.addView(view)
+                        view.setOnClickListener {
+
+                        }
 
                     }
                 }

@@ -7,6 +7,7 @@ interface Model<T : Document> {
     fun getName(): String
     fun get(id: String): Optional<T>
     fun delete(id: Long): Boolean
+    fun delete(ids: List<Long>): Boolean
     fun add(item: T): Boolean
     fun getAll(): Optional<List<T>>
     fun fromMap(data: Map<String, Any?>): T
