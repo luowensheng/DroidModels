@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.text.Editable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,6 +17,9 @@ import android.widget.Space
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.droidmodels.Post.Model.update
+import com.example.droidmodels.Post.Model.url
+import com.example.droidmodels.models.Column
 import com.example.droidmodels.models.SQLColumn
 import com.example.droidmodels.models.SQLDatabase
 import com.example.droidmodels.models.SQLModel
@@ -188,28 +192,37 @@ class MainActivity: AppCompatActivity() {
 
         var isInSearchView = true
 
-        switchSearchBtn.setOnClickListener {
-            if (!isInSearchView){
-                container.removeAllViews()
-                container.addView(searchView)
-                isInSearchView = true
+        fun goToSearchView(post: Post?){
+            container.removeAllViews()
+            container.addView(searchView)
+            isInSearchView = true
 
-                val submitBtn = findViewById<Button>(R.id.submit)
-                submitBtn.setOnClickListener {
-                    val url=findViewById<EditText>(R.id.url).text.toString()
-                    val title=findViewById<EditText>(R.id.title).text.toString()
-                    val data=findViewById<EditText>(R.id.data).text.toString()
-                    val categories=findViewById<EditText>(R.id.categories).text.toString()
-                    val liked= false
-                    val inReadingList= false
-                    val createdDate="date #${Post.Counter.count}"
-                    val imageUrl=findViewById<EditText>(R.id.imageUrl).text.toString()
+            val submitBtn = findViewById<Button>(R.id.submit)
+            val formTitle = findViewById<TextView>(R.id.form_title)
+            post.ifNotNull {
+                findViewById<EditText>(R.id.url).setText(it.url)
+                findViewById<EditText>(R.id.title).setText(it.title)
+                findViewById<EditText>(R.id.data).setText(it.data)
+                findViewById<EditText>(R.id.categories).setText(it.categories)
+                findViewById<EditText>(R.id.imageUrl).setText(it.imageUrl)
+                formTitle.text = "Update Post"
+            }.ifNull {
+                formTitle.text = "Create Post"
+            }
+            submitBtn.setOnClickListener {
 
-//                    if (listOf(url, title, categories, data, imageUrl).any { url.isBlank() }){
-//                        Toast.makeText(this, "Fields must not be blank!", Toast.LENGTH_SHORT).show()
-//                        return@setOnClickListener
-//                    }read
-                    val success = Post.add(
+                val url=findViewById<EditText>(R.id.url).text.toString()
+                val title=findViewById<EditText>(R.id.title).text.toString()
+                val data=findViewById<EditText>(R.id.data).text.toString()
+                val categories=findViewById<EditText>(R.id.categories).text.toString()
+                val liked = false
+                val inReadingList= false
+                val createdDate="date #${Post.Counter.count}"
+                val imageUrl=findViewById<EditText>(R.id.imageUrl).text.toString()
+                val success: Boolean
+
+                if (post == null){
+                    success = Post.add(
                         Post(
                             url=url,
                             title=title,
@@ -221,10 +234,38 @@ class MainActivity: AppCompatActivity() {
                             imageUrl=imageUrl,
                         )
                     )
-                    Toast.makeText(this, if (success) "Success" else "Failed", Toast.LENGTH_SHORT).show()
-                    container.removeAllViews()
-                    container.addView(searchView)
+                } else {
+                    val map = mutableMapOf<Column<Post, *>, Any>()
+
+                    success = Post.update(post.id.toString()) {
+                        post.ifNotNull {
+                            if (it.url != url) {
+                                map[Post.url] = url
+                            }
+                            if (it.title != title) {
+                                map[Post.title] = url
+                            }
+                            if (it.data != data) {
+                                map[Post.data] = url
+                            }
+                            if (it.categories != categories) {
+                                map[Post.categories] = url
+                            }
+                            if (it.imageUrl != imageUrl) {
+                                map[Post.imageUrl] = imageUrl
+                            }
+                        }
+                        map
+                    }
                 }
+
+                Toast.makeText(this, if (success) "Success" else "Failed", Toast.LENGTH_SHORT).show()
+                goToSearchView(post)
+            }
+        }
+        switchSearchBtn.setOnClickListener {
+            if (!isInSearchView){
+                goToSearchView(null)
 
             }
         }
@@ -245,16 +286,16 @@ class MainActivity: AppCompatActivity() {
                             postContainer.removeView(it.second)
                         }
                     }
-//                    postContainer.removeAllViews()
                 }
 
                 Post.getAll().ifPresent {
-                    it.forEach {post ->
+                    it.withIndex().forEach {(i, post) ->
+                        Log.e("GOT INDEX", "$i => $post")
                         val view = post.toView(this)
                         posts.add(Pair(post, view))
                         postContainer.addView(view)
                         view.setOnClickListener {
-
+                              goToSearchView(post)
                         }
 
                     }
@@ -278,6 +319,10 @@ fun<T: View> KClass<T>.fromResourceId(context: Context, id: Int): T {
 
 fun <T> T?.ifNotNull(f: (T)->Unit){
     if (this != null) f(this)
+}
+
+fun <T> T?.ifNull(f: ()->Unit){
+    if (this == null) f()
 }
 
 fun <T> Optional<T>.ifPresent(f: (T)->Unit){

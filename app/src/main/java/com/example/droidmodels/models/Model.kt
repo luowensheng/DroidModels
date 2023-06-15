@@ -11,7 +11,7 @@ interface Model<T : Document> {
     fun add(item: T): Boolean
     fun getAll(): Optional<List<T>>
     fun fromMap(data: Map<String, Any?>): T
-    fun<K: Model<T>> K.update(id: String, block: K.() -> Map<Column<*, T>, Any>): Boolean
+    fun<K: Model<T>> K.update(id: String, block: K.() -> Map<Column<T, *>, Any>): Boolean
     fun<K: Model<T>> K.query(block: K.() -> Query<T>): Optional<List<T>>
 //    fun query(query: String): Model<T>
 

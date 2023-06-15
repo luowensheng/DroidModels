@@ -134,13 +134,12 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
                     map[name] = value
                 }
             }
-
         }
         cursor.close()
         return Optional.of(this.fromMap(map))
     }
 
-    override fun<K: Model<T>> K.update(id: String, block: K.() -> Map<Column<*, T>, Any>): Boolean {
+    override fun<K: Model<T>> K.update(id: String, block: K.() -> Map<Column<T, *>, Any>): Boolean {
 
         val values = ContentValues()
 
@@ -149,8 +148,11 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
             values.put(column.name, value)
         }
 
+        Log.e("UPDATE QUERY", "name$name, values=[$values] ${this@SQLModel.id.name} = $id")
+
         val count = db.writableDatabase.update(name, values, "${this@SQLModel.id.name} = ?", arrayOf(id))
         db.writableDatabase.close()
+        Log.e("UPDATE QUERY RESULT", "name$name, values=[$values] ${this@SQLModel.id.name} = $id => [count:${count} == update_count:${updates.size}")
 
         return count == updates.size
     }
