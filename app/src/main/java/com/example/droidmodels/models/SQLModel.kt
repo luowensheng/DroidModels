@@ -82,11 +82,13 @@ class SQLDatabase(
 
 abstract class SQLModel<T : Document>(private val name: String, private val kClass: KClass<T>, private val idKey: String="id"): Model<T> {
     abstract val id: SQLPrimaryColumn<T, *>
-    var fieldToColumnMapping: MutableMap<String, String>  = mutableMapOf()
+    private var fieldToColumnMapping: MutableMap<String, String>  = mutableMapOf()
+    private var columnToFieldMapping: MutableMap<String, String>  = mutableMapOf()
 
     fun postInit(){
         getColumns().forEach {
             fieldToColumnMapping[it.fieldName] = it.name
+            columnToFieldMapping[it.name] = it.fieldName
         }
     }
 
@@ -125,14 +127,19 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
         }
 
         val map: MutableMap<String, Any> = mutableMapOf()
-        kClass.getFields().forEach { (name, type) ->
-
+        kClass.getFields().forEach { (column, type) ->
+            val name = fieldToColumnMapping[column] ?: return@forEach
             val columnIndex = cursor.getColumnIndex(name)
             if (columnIndex > -1){
                 val value = cursor.get(columnIndex, type.getType())
                 if (value != null){
                     map[name] = value
+                    Log.e("READING COLUMN", "$name => $value")
+                } else {
+                    Log.e("READING COLUMN", "$name => null")
                 }
+            }else {
+                Log.e("Missing COLUMN", "$name => null")
             }
         }
         cursor.close()
@@ -176,8 +183,11 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
         val values = ContentValues()
 
         for (memberName in item.getMemberNames()){
+            Log.e("SETTING COLUMN", "$memberName => ${item.getMember<Any>(memberName)} => [${fieldToColumnMapping[memberName]}]")
             item.getMember<Any>(memberName)?.let {
                 fieldToColumnMapping[memberName]?.let { columnName ->
+                    Log.e("SETTING COLUMN VALUE", "$columnName => ${it}")
+
                     values.put(columnName, it)
                 }
             }
@@ -207,15 +217,20 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
             val idColumnIndex = cursor.getColumnIndex(id.name)
             val id = cursor.getInt(idColumnIndex)
             val map: MutableMap<String, Any> = mutableMapOf()
-            kClass.getFields().forEach { (name, type) ->
-
+            kClass.getFields().forEach { (column, type) ->
+                Log.e("QUERY SELECT", "$column => ${fieldToColumnMapping[column]} vs [${columnToFieldMapping[column]}]")
+                val name = fieldToColumnMapping[column] ?: return@forEach
                 val columnIndex = cursor.getColumnIndex(name)
                 if (columnIndex > -1){
                     val value = cursor.get(columnIndex, type.getType())
                     if (value!=null){
-                        map[name] = value
+                        map[columnToFieldMapping[name]!!] = value
+                        Log.e("READING COLUMN", "$name => $value")
+                    } else {
+                        Log.e("READING COLUMN", "$name => null")
                     }
-                        Log.e("VALUE CUSROR", "[$value] retrieved for $name")
+                } else {
+                    Log.e("Missing COLUMN", "$name => null")
                 }
             }
             map[this.idKey] = id

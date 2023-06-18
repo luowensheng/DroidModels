@@ -62,6 +62,7 @@ data class Post(
             val imageUrl = SQLColumn("image_url", Post::imageUrl)
 
             override fun fromMap(data: Map<String, Any?>): Post {
+                Log.e("INPUT MAP", "$data")
                 val post = Post(
                     url=data["url"].cast(""),
                     title=data["title"].cast(""),
@@ -143,8 +144,8 @@ data class Post(
         var fcount = 0
         for (field in this.getMemberNames()){
             val value = this.getMember<Any>(field)
-            Log.d("APP", "${fcount++} -> ${field}: ${value}")
-            val textView = getTextView(" ${field}: ${value} | ")
+            Log.d("APP", "${fcount++} -> ${field}: $value")
+            val textView = getTextView(" ${field}: $value | ")
 
             if (items.size>0 && items.size%nColumns==0){
                 addRow(items)
@@ -153,7 +154,7 @@ data class Post(
                 items.add(textView)
             }
         }
-        if (items.size> 0 ){
+        if (items.size > 0){
             addRow(items)
         }
         Counter.index++
@@ -266,7 +267,6 @@ class MainActivity: AppCompatActivity() {
         switchSearchBtn.setOnClickListener {
             if (!isInSearchView){
                 goToSearchView(null)
-
             }
         }
 
@@ -295,21 +295,15 @@ class MainActivity: AppCompatActivity() {
                         posts.add(Pair(post, view))
                         postContainer.addView(view)
                         view.setOnClickListener {
-                              goToSearchView(post)
-                        }
+                            toast("Updating ${post.title}")
+                            goToSearchView(post)
 
+                        }
                     }
                 }
-
-//                randomPostBtn.setOnClickListener {
-//                    postContainer.removeAllViews()
-//                }
-
             }
         }
-
     }
-
 }
 
 fun<T: View> KClass<T>.fromResourceId(context: Context, id: Int): T {
@@ -327,6 +321,10 @@ fun <T> T?.ifNull(f: ()->Unit){
 
 fun <T> Optional<T>.ifPresent(f: (T)->Unit){
     if (this.isPresent) f(this.get())
+}
+
+fun Context.toast(text: String, duration: Int=Toast.LENGTH_SHORT){
+    Toast.makeText(this, text, duration).show()
 }
 //fun <T: KClass<View>> T.fromResourceId(context: Context, id: Int): View {
 //    val inflater = LayoutInflater.from(context)
