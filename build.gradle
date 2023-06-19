@@ -11,7 +11,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'com.example.droidmodels'
             artifactId = 'droidmodels'
-            version = "0.0.1"
+            version = "0.0.2"
 
             pom {
                 description = 'Database wrapper of android'
