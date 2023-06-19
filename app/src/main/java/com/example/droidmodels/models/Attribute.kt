@@ -1,6 +1,5 @@
 package com.example.droidmodels.models
 
-import android.util.Log
 import java.lang.reflect.Field
 import kotlin.reflect.KClass
 

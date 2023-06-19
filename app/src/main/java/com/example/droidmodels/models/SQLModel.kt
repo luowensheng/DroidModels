@@ -22,22 +22,10 @@ class SQLDatabase(
     private val hasSetDB = false
 
     override fun onCreate(db: SQLiteDatabase) {
-        Log.e("TABLE CREATE", "START")
-        Log.e("TABLE CREATE", "START")
-        Log.e("TABLE CREATE", "START")
-        Log.e("TABLE CREATE", "START")
-        Log.e("TABLE CREATE", "START")
-        Log.e("TABLE CREATE", "START")
-        Log.e("TABLE CREATE", "START")
-        Log.e("TABLE CREATE", "START")
-        Log.e("TABLE CREATE", "START")
 
         for (value in models.values){
             db.execSQL(value)
-            Log.e("TABLE CREATE", value)
         }
-        Log.e("TABLE CREATE", "DONE")
-
     }
 
     private fun createTableCommand(model: SQLModel<*>): String {
@@ -65,9 +53,6 @@ class SQLDatabase(
         model.postInit()
         val command = createTableCommand(model)
         models[model.getName()] = command
-//
-//        this.readableDatabase.execSQL(command)
-//        this.writableDatabase.close()
     }
 
     override fun onUpgrade(db: SQLiteDatabase, p1: Int, p2: Int) {
@@ -134,12 +119,7 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
                 val value = cursor.get(columnIndex, type.getType())
                 if (value != null){
                     map[name] = value
-                    Log.e("READING COLUMN", "$name => $value")
-                } else {
-                    Log.e("READING COLUMN", "$name => null")
                 }
-            }else {
-                Log.e("Missing COLUMN", "$name => null")
             }
         }
         cursor.close()
@@ -154,13 +134,8 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
         updates.forEach {(column, value) ->
             values.put(column.name, value)
         }
-
-        Log.e("UPDATE QUERY", "name$name, values=[$values] ${this@SQLModel.id.name} = $id")
-
         val count = db.writableDatabase.update(name, values, "${this@SQLModel.id.name} = ?", arrayOf(id))
         db.writableDatabase.close()
-        Log.e("UPDATE QUERY RESULT", "name$name, values=[$values] ${this@SQLModel.id.name} = $id => [count:${count} == update_count:${updates.size}")
-
         return count == updates.size
     }
 
@@ -173,8 +148,6 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
         val count = db.writableDatabase.delete(name, "${this.id.name} = ?", ids.map { "$it" }.toTypedArray())
         db.writableDatabase.close()
 
-        Log.e("RAPPING", "count => [$count], id => $id")
-
         return count == ids.size
     }
 
@@ -183,11 +156,8 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
         val values = ContentValues()
 
         for (memberName in item.getMemberNames()){
-            Log.e("SETTING COLUMN", "$memberName => ${item.getMember<Any>(memberName)} => [${fieldToColumnMapping[memberName]}]")
             item.getMember<Any>(memberName)?.let {
                 fieldToColumnMapping[memberName]?.let { columnName ->
-                    Log.e("SETTING COLUMN VALUE", "$columnName => ${it}")
-
                     values.put(columnName, it)
                 }
             }
@@ -200,17 +170,11 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
     }
 
     private fun query(q: String): Optional<List<T>> {
-        Log.e("DBQUERY", q)
         val cursor = db.readableDatabase.rawQuery(q, null)
-        Log.e("DBQUERY MADE!!", q)
-
         if (!cursor.moveToFirst()) {
             cursor.close()
             return Optional.empty()
         }
-        Log.e("CURSOR", "$cursor")
-        Log.e("CURSOR", "${cursor.columnCount} ${cursor.count}")
-
         val items = mutableListOf<T>()
 
         do {
@@ -218,27 +182,20 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
             val id = cursor.getInt(idColumnIndex)
             val map: MutableMap<String, Any> = mutableMapOf()
             kClass.getFields().forEach { (column, type) ->
-                Log.e("QUERY SELECT", "$column => ${fieldToColumnMapping[column]} vs [${columnToFieldMapping[column]}]")
                 val name = fieldToColumnMapping[column] ?: return@forEach
                 val columnIndex = cursor.getColumnIndex(name)
                 if (columnIndex > -1){
                     val value = cursor.get(columnIndex, type.getType())
                     if (value!=null){
                         map[columnToFieldMapping[name]!!] = value
-                        Log.e("READING COLUMN", "$name => $value")
-                    } else {
-                        Log.e("READING COLUMN", "$name => null")
                     }
-                } else {
-                    Log.e("Missing COLUMN", "$name => null")
                 }
             }
             map[this.idKey] = id
-            Log.e("MAPP", "\n\n${map}\n\n")
-
             items.add(fromMap(map))
         } while (cursor.moveToNext())
         cursor.close()
+
         return Optional.of(items)
     }
 
@@ -266,7 +223,7 @@ fun Cursor.get(columnIndex: Int, type: KClass<*>): Any? {
         Short::class -> getShort(columnIndex)
         Float::class -> getFloat(columnIndex)
         String::class -> getString(columnIndex)
-        else -> null // throw TypeCastException("invalid type for $type")
+        else -> null
     }
 }
 
@@ -282,7 +239,6 @@ fun ContentValues.put(name: String, value: Any){
         is Short -> put(name, value)
         is String -> put(name, value)
         else -> Unit
-//        else -> throw Exception("Invalid type ${value::class} for SQL query")
     }
 }
 

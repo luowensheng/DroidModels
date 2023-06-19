@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.text.Editable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -18,7 +17,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.droidmodels.Post.Model.update
-import com.example.droidmodels.Post.Model.url
 import com.example.droidmodels.models.Column
 import com.example.droidmodels.models.SQLColumn
 import com.example.droidmodels.models.SQLDatabase
@@ -177,7 +175,7 @@ class MainActivity: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         actionBar.ifNotNull { it.hide() }
         setContentView(R.layout.main)
-        Log.e("DATABASE db DELETED", "Success: ${this.deleteDatabase("db")}")
+//        Log.e("DATABASE db DELETED", "Success: ${this.deleteDatabase("db")}")
         val db = SQLDatabase(this, null, "db", 1)
         db.addModel(Post)
 
@@ -209,6 +207,11 @@ class MainActivity: AppCompatActivity() {
                 formTitle.text = "Update Post"
             }.ifNull {
                 formTitle.text = "Create Post"
+                findViewById<EditText>(R.id.url).setText("")
+                findViewById<EditText>(R.id.title).setText("")
+                findViewById<EditText>(R.id.data).setText("")
+                findViewById<EditText>(R.id.categories).setText("")
+                findViewById<EditText>(R.id.imageUrl).setText("")
             }
             submitBtn.setOnClickListener {
 
@@ -235,6 +238,7 @@ class MainActivity: AppCompatActivity() {
                             imageUrl=imageUrl,
                         )
                     )
+                    toast("ADDED NEW POST")
                 } else {
                     val map = mutableMapOf<Column<Post, *>, Any>()
 
@@ -258,10 +262,12 @@ class MainActivity: AppCompatActivity() {
                         }
                         map
                     }
+                    toast("UPDATED NEW POST ${post.id}")
+
                 }
 
                 Toast.makeText(this, if (success) "Success" else "Failed", Toast.LENGTH_SHORT).show()
-                goToSearchView(post)
+                goToSearchView(null)
             }
         }
         switchSearchBtn.setOnClickListener {
@@ -286,6 +292,7 @@ class MainActivity: AppCompatActivity() {
                             postContainer.removeView(it.second)
                         }
                     }
+                    posts.clear()
                 }
 
                 Post.getAll().ifPresent {
@@ -326,7 +333,3 @@ fun <T> Optional<T>.ifPresent(f: (T)->Unit){
 fun Context.toast(text: String, duration: Int=Toast.LENGTH_SHORT){
     Toast.makeText(this, text, duration).show()
 }
-//fun <T: KClass<View>> T.fromResourceId(context: Context, id: Int): View {
-//    val inflater = LayoutInflater.from(context)
-//    return inflater.inflate(id, null, false)
-//}

@@ -1,7 +1,5 @@
 package com.example.droidmodels.models
 
-import android.util.Log
-import java.lang.reflect.Field
 import kotlin.properties.Delegates
 import kotlin.reflect.KClass
 
@@ -15,10 +13,6 @@ fun <T: Any> KClass<T>.getFields(): List<Pair<String, Attribute>> {
     }
 }
 
-enum class PrimaryKey {
-    STRING,
-    LONG
-}
 
 abstract class Document {
     var id by Delegates.notNull<Long>()

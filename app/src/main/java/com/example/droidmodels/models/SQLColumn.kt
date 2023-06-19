@@ -34,7 +34,6 @@ open class SQLColumn<T, K: Any>(
         }
         return SQLQuery("WHERE $name $compare $value", true)
     }
-
 }
 
 class SQLPrimaryColumn<T, K: Any>(name: String, kClass: KMutableProperty1<T, K>): SQLColumn<T, K>(name, kClass, primaryKey = true){
