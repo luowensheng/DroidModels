@@ -4,18 +4,3 @@ plugins {
     id 'com.android.library' version '8.0.2' apply false
     id 'org.jetbrains.kotlin.android' version '1.8.20' apply false
 }
-apply plugin: 'maven-publish'
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'com.example.droidmodels'
-            artifactId = 'droidmodels'
-            version = "0.0.2"
-
-            pom {
-                description = 'Database wrapper of android'
-            }
-        }
-    }
-}

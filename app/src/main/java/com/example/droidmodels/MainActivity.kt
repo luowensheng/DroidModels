@@ -17,12 +17,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.droidmodels.Post.Model.update
-import com.example.droidmodels.models.Column
-import com.example.droidmodels.models.SQLColumn
-import com.example.droidmodels.models.SQLDatabase
-import com.example.droidmodels.models.SQLModel
-import com.example.droidmodels.models.Document
-import com.example.droidmodels.models.SQLPrimaryColumn
+import com.luowensheng.droid_models.models.Document
+import com.luowensheng.droid_models.models.SQLPrimaryColumn
+
 import java.util.Optional
 import kotlin.reflect.KClass
 
@@ -47,17 +44,23 @@ data class Post(
         var index = 0
     }
 
-        companion object Model: SQLModel<Post>("post", Post::class) {
+        companion object Model: com.luowensheng.droid_models.models.SQLModel<Post>("post", Post::class) {
             override val id = SQLPrimaryColumn("id", Post::id)
 
-            val url = SQLColumn("url", Post::url)
-            val title = SQLColumn("title", Post::title)
-            val data = SQLColumn("data", Post::data)
-            val categories = SQLColumn("categories", Post::categories)
-            val liked = SQLColumn("liked", Post::liked)
-            val inReadingList = SQLColumn("in_reading_list", Post::inReadingList)
-            val createdDate = SQLColumn("created_date", Post::createdDate)
-            val imageUrl = SQLColumn("image_url", Post::imageUrl)
+            val url = com.luowensheng.droid_models.models.SQLColumn("url", Post::url)
+            val title = com.luowensheng.droid_models.models.SQLColumn("title", Post::title)
+            val data = com.luowensheng.droid_models.models.SQLColumn("data", Post::data)
+            val categories =
+                com.luowensheng.droid_models.models.SQLColumn("categories", Post::categories)
+            val liked = com.luowensheng.droid_models.models.SQLColumn("liked", Post::liked)
+            val inReadingList = com.luowensheng.droid_models.models.SQLColumn(
+                "in_reading_list",
+                Post::inReadingList
+            )
+            val createdDate =
+                com.luowensheng.droid_models.models.SQLColumn("created_date", Post::createdDate)
+            val imageUrl =
+                com.luowensheng.droid_models.models.SQLColumn("image_url", Post::imageUrl)
 
             override fun fromMap(data: Map<String, Any?>): Post {
                 Log.e("INPUT MAP", "$data")
@@ -176,7 +179,7 @@ class MainActivity: AppCompatActivity() {
         actionBar.ifNotNull { it.hide() }
         setContentView(R.layout.main)
 //        Log.e("DATABASE db DELETED", "Success: ${this.deleteDatabase("db")}")
-        val db = SQLDatabase(this, null, "db", 1)
+        val db = com.luowensheng.droid_models.models.SQLDatabase(this, null, "db", 1)
         db.addModel(Post)
 
         val searchView = LinearLayout::class.fromResourceId(this, R.layout.searchview)
@@ -240,7 +243,7 @@ class MainActivity: AppCompatActivity() {
                     )
                     toast("ADDED NEW POST")
                 } else {
-                    val map = mutableMapOf<Column<Post, *>, Any>()
+                    val map = mutableMapOf<com.luowensheng.droid_models.models.Column<Post, *>, Any>()
 
                     success = Post.update(post.id.toString()) {
                         post.ifNotNull {

@@ -1,11 +1,10 @@
-package com.example.droidmodels.models
+package com.luowensheng.droid_models.models
 
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import android.util.Log
 import java.lang.IllegalArgumentException
 import java.util.Optional
 import kotlin.reflect.KClass
@@ -65,7 +64,8 @@ class SQLDatabase(
 
 
 
-abstract class SQLModel<T : Document>(private val name: String, private val kClass: KClass<T>, private val idKey: String="id"): Model<T> {
+abstract class SQLModel<T : Document>(private val name: String, private val kClass: KClass<T>, private val idKey: String="id"):
+    Model<T> {
     abstract val id: SQLPrimaryColumn<T, *>
     private var fieldToColumnMapping: MutableMap<String, String>  = mutableMapOf()
     private var columnToFieldMapping: MutableMap<String, String>  = mutableMapOf()

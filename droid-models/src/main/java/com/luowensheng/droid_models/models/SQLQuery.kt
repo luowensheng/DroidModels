@@ -1,4 +1,4 @@
-package com.example.droidmodels.models
+package com.luowensheng.droid_models.models
 
 class SQLQuery<T>(baseQuery: String, private val isFilter: Boolean): Query<T> {
 

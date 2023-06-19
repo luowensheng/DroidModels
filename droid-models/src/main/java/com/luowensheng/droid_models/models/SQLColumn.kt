@@ -1,4 +1,4 @@
-package com.example.droidmodels.models
+package com.luowensheng.droid_models.models
 
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.jvm.jvmErasure

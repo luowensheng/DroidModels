@@ -1,4 +1,4 @@
-package com.example.droidmodels.models
+package com.luowensheng.droid_models.models
 
 enum class OrderBy {
     ASCENDING,

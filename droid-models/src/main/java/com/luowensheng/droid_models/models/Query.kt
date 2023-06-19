@@ -1,11 +1,11 @@
-package com.example.droidmodels.models
+package com.luowensheng.droid_models.models
 
 
 
 interface Query<T> {
     fun isFilter(): Boolean
     fun limit(): Query<T>
-    fun orderBy(orderBy: OrderBy=OrderBy.DESCENDING): Query<T>
+    fun orderBy(orderBy: OrderBy = OrderBy.DESCENDING): Query<T>
     fun orderBy(orderBy: Column<T, *>): Query<T>
     fun getFirst(): Query<T>
     fun toList(): Query<T>
