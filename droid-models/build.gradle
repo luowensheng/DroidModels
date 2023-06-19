@@ -47,7 +47,7 @@ afterEvaluate {
 
                 groupId = 'com.github.luowensheng'
                 artifactId = 'droid-models'
-                version = '0.0.4'
+                version = '0.0.5'
             }
         }
     }
