@@ -164,6 +164,7 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
         }
 
         val rowId = db.writableDatabase.insert(name, null, values)
+        item.id = rowId
         db.writableDatabase.close()
 
         return rowId != (-1).toLong()
