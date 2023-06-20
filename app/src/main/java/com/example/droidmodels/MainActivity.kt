@@ -28,6 +28,7 @@ fun <T: Any, U: Any> T?.cast(default: U): U {
     return this as U
 }
 
+
 data class Post(
     var url: String,
     var title: String,

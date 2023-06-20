@@ -11,6 +11,13 @@ open class SQLColumn<T, K: Any>(
     val unique: Boolean = false,
 
     ): Column<T, K>(name) {
+
+    constructor(
+        property: KMutableProperty1<T, K>,
+        primaryKey: Boolean = false,
+        unique: Boolean = false,
+    ) : this(property.name, property, primaryKey, unique)
+
     private val kClass = property.getter.returnType.jvmErasure.java
     val fieldName = property.name
     fun getSQLType(): String {
