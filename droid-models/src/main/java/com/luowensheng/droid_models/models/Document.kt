@@ -1,5 +1,6 @@
 package com.luowensheng.droid_models.models
 
+import android.util.Log
 import kotlin.properties.Delegates
 import kotlin.reflect.KClass
 
@@ -21,7 +22,9 @@ abstract class Document {
     init {
         fields = this::class.getFields().filter {
             !it.second.isStatic
-        }.associate {  it }
+        }.associate {
+            it
+        }
     }
 
 

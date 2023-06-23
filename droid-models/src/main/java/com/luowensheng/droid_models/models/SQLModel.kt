@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
 import java.lang.IllegalArgumentException
 import java.util.Optional
 import kotlin.reflect.KClass
@@ -117,9 +118,7 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
             val columnIndex = cursor.getColumnIndex(name)
             if (columnIndex > -1){
                 val value = cursor.get(columnIndex, type.getType())
-                if (value != null){
-                    map[name] = value
-                }
+                map[name] = value
             }
         }
         cursor.close()
@@ -136,6 +135,7 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
         }
         val count = db.writableDatabase.update(name, values, "${this@SQLModel.id.name} = ?", arrayOf(id))
         db.writableDatabase.close()
+
         return count == updates.size
     }
 
@@ -151,18 +151,24 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
         return count == ids.size
     }
 
+    override fun toMap(item: T): Map<String, Any?> {
+        val map = mutableMapOf<String, Any?>()
+        for (memberName in item.getMemberNames()){
+            fieldToColumnMapping[memberName]?.let { columnName ->
+                map[columnName] = item.getMember(memberName)
+            }
+        }
+        return map
+    }
+
     override fun add(item: T): Boolean {
 
         val values = ContentValues()
-
-        for (memberName in item.getMemberNames()){
-            item.getMember<Any>(memberName)?.let {
-                fieldToColumnMapping[memberName]?.let { columnName ->
-                    values.put(columnName, it)
-                }
+        toMap(item).map {
+            if (it.value!= null){
+                values.put(it.key, it.value!!)
             }
         }
-
         val rowId = db.writableDatabase.insert(name, null, values)
         item.id = rowId
         db.writableDatabase.close()
@@ -177,23 +183,23 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
             return Optional.empty()
         }
         val items = mutableListOf<T>()
-
+        var COUNT = 0
         do {
             val idColumnIndex = cursor.getColumnIndex(id.name)
             val id = cursor.getInt(idColumnIndex)
             val map: MutableMap<String, Any> = mutableMapOf()
             kClass.getFields().forEach { (column, type) ->
+                if (type.isStatic) return@forEach
                 val name = fieldToColumnMapping[column] ?: return@forEach
                 val columnIndex = cursor.getColumnIndex(name)
                 if (columnIndex > -1){
                     val value = cursor.get(columnIndex, type.getType())
-                    if (value!=null){
-                        map[columnToFieldMapping[name]!!] = value
-                    }
+                    map[columnToFieldMapping[name]!!] = value
                 }
             }
             map[this.idKey] = id
             items.add(fromMap(map))
+            COUNT++
         } while (cursor.moveToNext())
         cursor.close()
 
@@ -213,18 +219,19 @@ abstract class SQLModel<T : Document>(private val name: String, private val kCla
     }
 }
 
-fun Cursor.get(columnIndex: Int, type: KClass<*>): Any? {
-    return when(type){
-        Byte::class -> getInt(columnIndex).toByte()
-        ByteArray::class -> getBlob(columnIndex)
-        Double::class -> getDouble(columnIndex)
-        Int::class -> getInt(columnIndex)
-        Long::class -> getLong(columnIndex)
-        Boolean::class -> getInt(columnIndex) > 0
-        Short::class -> getShort(columnIndex)
-        Float::class -> getFloat(columnIndex)
-        String::class -> getString(columnIndex)
-        else -> null
+fun Cursor.get(columnIndex: Int, type: KClass<*>): Any {
+
+    return when(type.java.name){
+        Byte::class.java.name -> getInt(columnIndex).toByte()
+        ByteArray::class.java.name  -> getBlob(columnIndex)
+        Double::class.java.name  -> getDouble(columnIndex)
+        Int::class.java.name  -> getInt(columnIndex)
+        Long::class.java.name  -> getLong(columnIndex)
+        Boolean::class.java.name  -> getInt(columnIndex) > 0
+        Short::class.java.name  -> getShort(columnIndex)
+        Float::class.java.name  -> getFloat(columnIndex)
+        String::class.java.name  -> getString(columnIndex)
+        else -> getString(columnIndex)
     }
 }
 
@@ -239,7 +246,7 @@ fun ContentValues.put(name: String, value: Any){
         is Long -> put(name, value)
         is Short -> put(name, value)
         is String -> put(name, value)
-        else -> Unit
+        else -> put(name, value.toString())
     }
 }
 

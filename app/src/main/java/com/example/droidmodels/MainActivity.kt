@@ -23,17 +23,17 @@ import com.luowensheng.droid_models.models.SQLPrimaryColumn
 import java.util.Optional
 import kotlin.reflect.KClass
 
-fun <T: Any, U: Any> T?.cast(default: U): U {
+fun <T: Any, U: Any> T?.cast(default: U, f:(Any)->U={it as U}): U {
     if (this==null) return default
-    return this as U
+    return f(this)
 }
 
 
 data class Post(
     var url: String,
     var title: String,
-    var data: String,
-    var categories: String,
+    var data: Map<String, String>,
+    var categories: List<String>,
     var liked: Boolean,
     var inReadingList: Boolean,
     var createdDate: String,
@@ -64,41 +64,66 @@ data class Post(
                 com.luowensheng.droid_models.models.SQLColumn("image_url", Post::imageUrl)
 
             override fun fromMap(data: Map<String, Any?>): Post {
-                Log.e("INPUT MAP", "$data")
+                Log.e("DATA", "---------------------------")
+                Log.e("DATA", "$data")
+                Log.e("DATA", "---------------------------")
                 val post = Post(
-                    url=data["url"].cast(""),
-                    title=data["title"].cast(""),
-                    data=data["data"].cast(""),
-                    categories=data["categories"].cast(""),
-                    liked=data["liked"].cast(false),
-                    inReadingList=data["inReadingList"].cast(false),
-                    createdDate=data["createdDate"].cast(""),
-                    imageUrl=data["imageUrl"].cast(""),
+                    url=data[url.name].cast(""),
+                    title=data[title.name].cast(""),
+                    data=data[this.data.name].cast(mapOf()){
+                        val k = it.toString()
+                        k.slice(1 until k.length-1)
+                            .split(", ")
+                            .associate {
+                                val l = it.split("=")
+                                l[0] to l[1]
+                            }
+                    },
+                    categories=data[categories.name].cast(listOf()) {
+                        val s = (it as String)
+                        s.slice(1 until s.length - 1)
+                            .split(", ")
+                    },
+                    liked=data[liked.name].cast(false),
+                    inReadingList=data[inReadingList.name].cast(false),
+                    createdDate=data[createdDate.name].cast(""),
+                    imageUrl=data[imageUrl.name].cast(""),
                 )
-                val itemId = data["id"]
+                val itemId = data[id.name]
                 if (itemId != null){
                    post.id = (itemId as Int).toLong()
                 }
-                //post.id = data["id"] as Long
-                println("\n$post\n")
                 return post
             }
 
-        fun default(): Post {
-            return Post(
-                url="https://google.com@${Counter.count}",
-                title="this is title ${Counter.count}",
-                data="{key: value#${Counter.count}}",
-                categories="[1, 3, 4]",
-                liked=Counter.count%3 ==0 ,
-                inReadingList=Counter.count%2 == 0,
-                createdDate="date #${Counter.count}",
-                imageUrl="http://image_${Counter.count}.png",
-            ).let {
-                Counter.count++
-                it
+            override fun toMap(item: Post): Map<String, Any?> {
+                return mapOf(
+                    url.name to item.url,
+                    title.name to item.title,
+                    data.name to item.data.toString(),
+                    categories.name to item.categories.toString(),
+                    liked.name to item.liked,
+                    inReadingList.name to item.inReadingList,
+                    createdDate.name to item.createdDate,
+                    imageUrl.name to item.imageUrl
+                )
             }
-        }
+
+//            fun default(): Post {
+//            return Post(
+//                url="https://google.com@${Counter.count}",
+//                title="this is title ${Counter.count}",
+//                data="{key: value#${Counter.count}}",
+//                categories="[1, 3, 4]",
+//                liked=Counter.count%3 ==0 ,
+//                inReadingList=Counter.count%2 == 0,
+//                createdDate="date #${Counter.count}",
+//                imageUrl="http://image_${Counter.count}.png",
+//            ).let {
+//                Counter.count++
+//                it
+//            }
+//        }
     }
 
     fun toView(context: Context, nColumns:Int=2): LinearLayout {
@@ -205,8 +230,8 @@ class MainActivity: AppCompatActivity() {
             post.ifNotNull {
                 findViewById<EditText>(R.id.url).setText(it.url)
                 findViewById<EditText>(R.id.title).setText(it.title)
-                findViewById<EditText>(R.id.data).setText(it.data)
-                findViewById<EditText>(R.id.categories).setText(it.categories)
+                findViewById<EditText>(R.id.data).setText(it.data.toString())
+                findViewById<EditText>(R.id.categories).setText(it.categories.toString())
                 findViewById<EditText>(R.id.imageUrl).setText(it.imageUrl)
                 formTitle.text = "Update Post"
             }.ifNull {
@@ -234,8 +259,8 @@ class MainActivity: AppCompatActivity() {
                         Post(
                             url=url,
                             title=title,
-                            data=data,
-                            categories=categories,
+                            data= mapOf("data" to data),
+                            categories=listOf(categories),
                             liked= liked,
                             inReadingList=inReadingList,
                             createdDate=createdDate,
@@ -252,13 +277,13 @@ class MainActivity: AppCompatActivity() {
                                 map[Post.url] = url
                             }
                             if (it.title != title) {
-                                map[Post.title] = url
+                                map[Post.title] = title
                             }
-                            if (it.data != data) {
-                                map[Post.data] = url
+                            if (it.data.toString() != data) {
+                                map[Post.data] = mapOf("data" to data).toString()
                             }
-                            if (it.categories != categories) {
-                                map[Post.categories] = url
+                            if (it.categories.toString() != categories) {
+                                map[Post.categories] = listOf(categories).toString()
                             }
                             if (it.imageUrl != imageUrl) {
                                 map[Post.imageUrl] = imageUrl

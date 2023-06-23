@@ -31,7 +31,7 @@ open class SQLColumn<T, K: Any>(
             Short::class.java  -> "INTEGER"
             Float::class.java  -> "REAL"
             String::class.java  -> "TEXT"
-            else -> throw TypeCastException("invalid type ${kClass} for column = '$name'")
+            else -> "TEXT"
         }
     }
 
