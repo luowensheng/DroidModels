@@ -21,6 +21,6 @@ Step 2. Add the dependency in your root build.gradle at the end of repositories:
 
 	dependencies {
 	
-	        implementation 'com.github.luowensheng:DroidModels:0.0.5'
+	        implementation 'com.github.luowensheng:DroidModels:0.0.7'
 	}
 ```
